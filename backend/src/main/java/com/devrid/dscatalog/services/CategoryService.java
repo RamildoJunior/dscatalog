@@ -2,11 +2,14 @@ package com.devrid.dscatalog.services;
 
 import com.devrid.dscatalog.dto.CategoryDTO;
 import com.devrid.dscatalog.entities.Category;
+import com.devrid.dscatalog.exceptions.DatabaseException;
 import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
 import com.devrid.dscatalog.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -50,6 +53,18 @@ public class CategoryService {
         catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Id " + id + " not found!");
         }
-        return null;
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Id " + id + " not found!");
+        }
+        try {
+            repository.deleteById(id);
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new DatabaseException("Integrity violation!");
+        }
     }
 }
