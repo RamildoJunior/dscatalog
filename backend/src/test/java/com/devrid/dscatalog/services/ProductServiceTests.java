@@ -1,8 +1,10 @@
 package com.devrid.dscatalog.services;
 
+import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
 import com.devrid.dscatalog.repositories.ProductRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,8 +34,22 @@ public class ProductServiceTests {
         Mockito.when(repository.existsById(nonExistingId)).thenReturn(false);
         Mockito.when(repository.existsById(dependentId)).thenReturn(true);
 
+        Mockito.when(repository.existsById(existingId)).thenReturn(true);
+        Mockito.when(repository.existsById(existingId)).thenReturn(false);
+
     }
 
+
+    @Test
+    public void deleteShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+
+        Assertions.assertThrows(ResourceNotFoundException.class,() -> {
+            service.delete(nonExistingId);
+
+        });
+    }
+
+    @Test
     public void deleteShouldDoNothingWhenIdExistis(){
 
         Assertions.assertDoesNotThrow(()->{
