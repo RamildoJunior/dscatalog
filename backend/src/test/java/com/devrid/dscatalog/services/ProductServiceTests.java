@@ -1,5 +1,6 @@
 package com.devrid.dscatalog.services;
 
+import com.devrid.dscatalog.dto.ProductDTO;
 import com.devrid.dscatalog.entities.Product;
 import com.devrid.dscatalog.exceptions.DatabaseException;
 import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
@@ -15,7 +16,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -60,6 +63,18 @@ public class ProductServiceTests {
         Mockito.when(repository.existsById(nonExistingId)).thenReturn(false);
         Mockito.when(repository.existsById(dependentId)).thenReturn(true);
 
+
+    }
+
+    @Test
+    public void findAllPagedShouldReturnPage() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<ProductDTO> result = service.findAllPaged(pageable);
+
+        Assertions.assertNotNull(result);
+        Mockito.verify(repository, Mockito.times(1)).findAll(pageable);
 
     }
 
