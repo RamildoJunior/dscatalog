@@ -1,5 +1,6 @@
 package com.devrid.dscatalog.services;
 
+import com.devrid.dscatalog.exceptions.DatabaseException;
 import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
 import com.devrid.dscatalog.repositories.ProductRepository;
 import org.junit.jupiter.api.Assertions;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -27,18 +29,25 @@ public class ProductServiceTests {
     @BeforeEach
     void setUp() throws Exception {
         existingId = 1L;
+        nonExistingId = 2L;
+        dependentId = 3L;
 
         Mockito.doNothing().when(repository).deleteById(existingId);
+        Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 
         Mockito.when(repository.existsById(existingId)).thenReturn(true);
         Mockito.when(repository.existsById(nonExistingId)).thenReturn(false);
         Mockito.when(repository.existsById(dependentId)).thenReturn(true);
-
-        Mockito.when(repository.existsById(existingId)).thenReturn(true);
-        Mockito.when(repository.existsById(existingId)).thenReturn(false);
-
+        
     }
 
+    @Test
+    public void deleteShouldThrowDatabaseExceptionDependentId() {
+
+        Assertions. assertThrows(DatabaseException.class, () -> {
+            service.delete(dependentId);
+        });
+    }
 
     @Test
     public void deleteShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
