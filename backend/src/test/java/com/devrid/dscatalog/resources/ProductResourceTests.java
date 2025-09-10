@@ -2,10 +2,12 @@ package com.devrid.dscatalog.resources;
 
 
 import com.devrid.dscatalog.dto.ProductDTO;
+import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
 import com.devrid.dscatalog.services.ProductService;
 import com.devrid.dscatalog.tests.Factory;
 import org.junit.jupiter.api.BeforeEach;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -33,17 +35,27 @@ public class ProductResourceTests {
     @MockitoBean
     private ProductService productService;
 
+    private Long existingId;
+    private Long nonExistingId;
+
 
     private ProductDTO productDTO;
     private PageImpl<ProductDTO> page;
     @BeforeEach
     void setUp() throws Exception{
 
+        existingId = 1L;
+        nonExistingId = 2L;
+
         productDTO = Factory.createProductDTO();
 
         page = new PageImpl<>(List.of(productDTO));
 
         Mockito.when(productService.findAllPaged(ArgumentMatchers.any())).thenReturn(page);
+
+        Mockito.when(productService.findById(existingId)).thenReturn(productDTO);
+        Mockito.when(productService.findById(nonExistingId)).thenThrow(ResourceNotFoundException.class);
+
     }
 
     @Test
@@ -55,6 +67,25 @@ public class ProductResourceTests {
 
        result.andExpect(status().isOk());
 
+    }
+
+    @Test
+    public void findByIdShloudReturnProductWhenIdExists() throws Exception{
+        ResultActions result =
+                mockMvc.perform(get("/products/{id}", existingId)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.id").exists());
+    }
+
+    @Test
+    public void findByIdShloudReturnNotFoundWhenDoesNotExists() throws Exception{
+        ResultActions result =
+                mockMvc.perform(get("/products/{id}", nonExistingId)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        result.andExpect(status().isNotFound());
     }
 
 }
