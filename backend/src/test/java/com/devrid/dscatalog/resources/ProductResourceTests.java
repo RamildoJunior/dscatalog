@@ -2,6 +2,7 @@ package com.devrid.dscatalog.resources;
 
 
 import com.devrid.dscatalog.dto.ProductDTO;
+import com.devrid.dscatalog.exceptions.DatabaseException;
 import com.devrid.dscatalog.exceptions.ResourceNotFoundException;
 import com.devrid.dscatalog.services.ProductService;
 import com.devrid.dscatalog.tests.Factory;
@@ -45,6 +46,8 @@ public class ProductResourceTests {
 
     private Long existingId;
     private Long nonExistingId;
+
+    private Long dependentId;
     private ProductDTO productDTO;
     private PageImpl<ProductDTO> page;
     @BeforeEach
@@ -52,6 +55,7 @@ public class ProductResourceTests {
 
         existingId = 1L;
         nonExistingId = 2L;
+        dependentId = 3L;
 
         productDTO = Factory.createProductDTO();
 
@@ -64,6 +68,10 @@ public class ProductResourceTests {
 
         Mockito.when(productService.update(eq(existingId), any())).thenReturn(productDTO);
         Mockito.when(productService.update(eq(nonExistingId), any())).thenThrow(ResourceNotFoundException.class);
+
+        Mockito.doNothing().when(productService).delete(existingId);
+        Mockito.doThrow(ResourceNotFoundException.class).when(productService).delete(nonExistingId);
+        Mockito.doThrow(DatabaseException.class).when(productService).delete(nonExistingId);
 
     }
 
